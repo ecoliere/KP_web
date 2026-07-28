@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Регистрация</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> </head>
+<body class="gradient-background">
+    <div class="page-container">
+        <div class="form-container">
+            <h1>Регистрация</h1>
+                    <ul class="flash-messages">
+                            <li class="flash-{{ category }}">{{ message }}</li>
+                    </ul>
+
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="form-group">
+                    <label for="username">Имя пользователя:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Подтвердите пароль:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                </div>
+                <div class="form-group">
+                    <label for="full_name">Полное имя:</label>
+                    <input type="text" id="full_name" name="full_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <button type="submit" class="auth-button login-button form-submit-button">Зарегистрироваться</button>
+            </form> 
+            <p class="form-switch-link">
+                Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a>
+            </p>
+        </div> 
+    </div> 
+</body>
+</html>

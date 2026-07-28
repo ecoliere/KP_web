@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Редактирование Профиля</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"> {# Добавил ссылку на шрифт как в других шаблонах #}
+</head>
+<body class="gradient-background">
+    <nav class="navbar">
+        {# Сюда нужно вставить ваш стандартный навбар, возможно через {% include 'navbar.html' %}
+           или скопировать его HTML из других шаблонов (profile.html, search.html)
+           Пример:
+        <div class="navbar-container">
+            <a href="{{ url_for('home') }}" class="navbar-brand">Мой профиль</a>
+            <div class="navbar-links">
+                <a href="{{ url_for('chats_list') if config.get('CHAT_IMPLEMENTED') else '#' }}" title="Сообщения">... Сообщения ...</a>
+                <a href="{{ url_for('notifications') }}" title="Уведомления">... Уведомления ...</a>
+                <a href="{{ url_for('search_users') }}" title="Найти пользователей">... Поиск ...</a>
+                <a href="{{ url_for('logout') }}" class="auth-button register-button">Выйти</a>
+            </div>
+        </div>
+        #}
+    </nav>
+    <div class="page-container">
+        <div class="form-container edit-profile-container">
+            <h1>Редактирование профиля</h1>
+
+            {# ИСПРАВЛЕНО: Блок для flash-сообщений #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flash-messages" style="list-style-type: none; padding: 0; margin-bottom: 15px;">
+                        {% for category, message in messages %}
+                            <li class="alert alert-{{ category }}" style="padding: 10px; border: 1px solid #ccc; margin-bottom: 5px; border-radius: 4px;">{{ message }}</li>
+                        {% endfor %} {# <--- ДОБАВЛЕН НЕДОСТАЮЩИЙ ENDFOR #}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('edit_profile') }}" enctype="multipart/form-data"> {# Добавлен action для ясности #}
+                <div class="form-group">
+                    <label for="username">Имя пользователя (нельзя изменить)</label>
+                    <input type="text" id="username" name="username" value="{{ user_data.username or '' }}" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label for="full_name">Полное имя</label>
+                    <input type="text" id="full_name" name="full_name" value="{{ request.form.get('full_name', user_data.full_name or '') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ request.form.get('email', user_data.email or '') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="hobbies">Увлечения (через запятую)</label>
+                    <textarea id="hobbies" name="hobbies" rows="3">{{ request.form.get('hobbies', user_data.hobbies or '') }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="profile_picture">Новое фото профиля (необязательно)</label>
+                    <input type="file" id="profile_picture" name="profile_picture" accept="image/png, image/jpeg, image/gif">
+                    <p style="font-size: 0.85em; color: var(--text-grey-secondary, #6c757d); margin-top: 5px;"> {# Используем переменную цвета или запасной цвет #}
+                        Разрешены форматы: png, jpg, jpeg, gif.
+                        {# {% if config.MAX_CONTENT_LENGTH %}  #}
+                        {# Используйте config.get('MAX_CONTENT_LENGTH') или app.config.get('MAX_CONTENT_LENGTH') #}
+                        {# Макс. размер: {{ '%0.1f'|format(config.get('MAX_CONTENT_LENGTH', 0) / 1024 / 1024) }} MB. #}
+                        {# {% endif %} #}
+                    </p>
+                    {# ИСПРАВЛЕНО: Условное отображение текущего фото #}
+                    {% if user_data.profile_picture %}
+                    <div style="margin-top: 10px;" class="current-profile-picture-display">
+                        Текущее фото: 
+                        <div class="avatar-container-small" style="width: 50px; height: 50px; display: inline-block; vertical-align: middle; margin-left: 10px;">
+                             {% if user_data.profile_picture %}
+                                <img src="{{ url_for('static', filename='uploads/' + user_data.profile_picture) }}" 
+                                     alt="Текущее фото" 
+                                     class="profile-pic-small-custom">
+                            {% else %}
+                                {# Если вдруг здесь тоже нужен голубой кружок, хотя это текущее фото #}
+                                <div class="profile-pic-default-circle-small" aria-label="Текущее фото">
+                                    {% set initials = (user_data.username or '?')[0] %}
+                                    <span class="avatar-initials-small">{{ initials|upper }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="margin-top: 10px;">
+                        Текущее фото: Отсутствует
+                    </div>
+                    {% endif %}                      
+                </div>
+                
+                <div class="form-actions" style="margin-top: 25px; display: flex; justify-content: space-between; gap: 15px;">
+                    <button type="submit" class="auth-button form-submit-button" style="width: auto; flex-grow: 1;">Сохранить изменения</button>
+                    <a href="{{ url_for('home') }}" class="auth-button register-button" style="width: auto; flex-grow: 1; text-align:center; text-decoration:none;">Отмена</a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    {# Подключение общих скриптов, если необходимо #}
+</body>
+</html>

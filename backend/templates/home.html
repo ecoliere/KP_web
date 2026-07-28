@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Мой Профиль</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="gradient-background"> 
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('home') }}" class="navbar-brand">Мой профиль</a>
+            <div class="navbar-links">
+                <a href="{{ url_for('chats_list') }}" title="Сообщения">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-chat-left-dots-fill" viewBox="0 0 16 16">
+                          <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4.414a1 1 0 0 0-.707.293L.854 15.146A.5.5 0 0 1 0 14.793zm5 4a1 1 0 1 0-2 0 1 1 0 0 0 2 0m4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0m3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                     </svg>
+                     <span class="nav-link-text">Сообщения</span>
+                 </a>
+                <a href="{{ url_for('notifications') }}" title="Уведомления">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell-fill" viewBox="0 0 16 16">
+                          <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/>
+                     </svg>
+                    <span class="nav-link-text">Уведомления</span>
+                </a>
+                <a href="{{ url_for('search_users') }}" title="Найти пользователей">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                         <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                    </svg>
+                     <span class="nav-link-text">Поиск</span>
+                 </a>
+                 <a href="{{ url_for('logout') }}" class="auth-button register-button">Выйти</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="profile-page-container">
+
+        <div id="loading-indicator">Загрузка данных...</div>
+        <div id="error-display" class="error-message" style="display: none;"></div>
+
+        <header class="profile-header">
+             <div class="profile-header-content">
+                 <div class="profile-avatar-container">
+                     <img id="profile-pic" src="{{ url_for('static', filename='images/default_avatar.png') }}" alt="Фото профиля" class="profile-avatar default-pic">
+                 </div>
+                 <div class="profile-user-info">
+                    <h1 id="user-fullname">Загрузка...</h1>
+                    <span id="user-username" class="username-display">@загрузка...</span>
+                 </div>
+                 <div class="profile-header-actions">
+                     <a href="{{ url_for('edit_profile') }}" class="auth-button profile-header-button">Редактировать профиль</a>
+                 </div>
+             </div>
+        </header>
+
+        <main class="profile-main-content">
+
+            <aside class="profile-sidebar">
+                <section class="profile-widget" id="profile-about-section">
+                     <h2>Информация</h2>
+                     <div class="info-item"><strong>Email:</strong> <span id="user-email" class="loading-placeholder">...</span></div>
+                     <div class="info-item"><strong>Дата регистрации:</strong> <span id="user-reg-date" class="loading-placeholder">...</span></div>
+                     <div class="info-item"><strong>Последний визит:</strong> <span id="user-last-visit" class="loading-placeholder">...</span></div>
+                     <div class="info-item"><strong>Посещений:</strong> <span id="user-visit-count" class="loading-placeholder">...</span></div>
+                     <div class="info-item"><strong>Увлечения:</strong> <span id="user-hobbies" class="loading-placeholder">...</span></div>
+                </section>
+
+                <section class="profile-widget" id="chats-widget-section">
+                     <h2>Сообщения</h2>
+                     <div class="widget-link-container">
+                         <a href="{{ url_for('chats_list') }}" class="widget-action-link">
+                             Перейти к чатам
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-short" viewBox="0 0 16 16">
+                                  <path fill-rule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8"/>
+                             </svg>
+                         </a>
+                     </div>
+                </section>
+                
+
+                <section class="profile-widget" id="friends-widget-section">
+                     <h2>Друзья (<span id="friends-count">0</span>)</h2>
+                     <ul id="friends-list" class="widget-list"><li class="loading-placeholder">Загрузка...</li></ul>
+                     <p id="no-friends-message" class="empty-list-message" style="display: none;">У вас пока нет друзей.</p>
+                </section>
+
+                <section class="profile-widget" id="friend-requests-section">
+                     <h2>Заявки в друзья (<span id="requests-count">0</span>)</h2>
+                     <ul id="friend-requests-list" class="widget-list"><li class="loading-placeholder">Загрузка...</li></ul>
+                     <p id="no-requests-message" class="empty-list-message" style="display: none;">Новых заявок нет.</p>
+                </section>
+            </aside>
+
+            <div class="profile-feed">
+
+                 <section class="profile-widget" id="create-post-section">
+                     <h2>Новая запись</h2>
+                     <div class="create-post-form">
+                         <textarea id="post-content-input" placeholder="Что у вас нового?" rows="3"></textarea>
+                         <button id="publish-post-button" class="auth-button create-post-button">Опубликовать</button>
+                         <div id="post-error-display" class="error-message" style="display: none; margin-top: 10px; text-align: left;"></div>
+                     </div>
+                 </section>
+
+                 {# === Лента постов === #}
+                 <section class="profile-widget" id="posts-feed-section">
+                    <h2>Мои записи</h2>
+                    <div class="posts-feed" id="user-posts-feed">
+                         <p id="posts-loading-placeholder" class="loading-placeholder">Загрузка записей...</p>
+                         <p id="no-posts-message" class="empty-list-message" style="display: none;">У вас пока нет записей.</p>
+                    </div>
+                 </section>
+
+            </div> 
+        </main> 
+    </div> 
+
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+
+</body>
+</html>

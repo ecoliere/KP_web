@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>{{ chat_name }} - Чат</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --widget-background-color: #fff;
+            --widget-border-radius: 10px;
+            --shadow-medium: 0 5px 15px rgba(0,0,0,0.1);
+            --shadow-small: 0 1px 3px rgba(0,0,0,0.08);
+            --background-grey-light: #f4f6f8;
+            --background-grey-medium: #e9ecef;
+            --primary-blue: #007bff;
+            --primary-blue-dark: #0056b3;
+            --secondary-color: #6c757d;
+            --text-color-dark: #333;
+            --text-grey-secondary: #6c757d;
+            --border-color-light: #ddd;
+            --border-color-medium: #ccc;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #eef2f3, #cfd9df);
+        }
+
+        .chat-page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--widget-background-color);
+            border-radius: var(--widget-border-radius);
+            box-shadow: var(--shadow-medium);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 1.5em;
+        }
+
+        .chat-header-avatar-container {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: var(--background-grey-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            border: 2px solid white;
+        }
+
+        .chat-header-avatar-custom {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-header-avatar-default-circle {
+            width: 100%;
+            height: 100%;
+            background-color: var(--secondary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .chat-header-avatar-initials {
+            font-size: 1.2em;
+            text-transform: uppercase;
+        }
+
+        .chat-name {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .messages-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: var(--background-grey-light);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            box-shadow: var(--shadow-small);
+        }
+
+        .message-bubble .message-content {
+            margin-bottom: 3px;
+        }
+
+        .message-bubble .message-timestamp {
+            font-size: 0.75em;
+            text-align: right;
+        }
+
+        .message-sent {
+            background-color: var(--primary-blue);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-sent .message-timestamp {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .message-received {
+            background-color: var(--background-grey-medium);
+            color: var(--text-color-dark);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-received .message-timestamp {
+            color: var(--text-grey-secondary);
+        }
+
+        .message-received strong {
+            display: block;
+            font-size: 0.8em;
+            margin-bottom: 3px;
+            color: var(--primary-blue);
+        }
+
+        .message-input-area {
+            display: flex;
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color-light);
+            background-color: white;
+        }
+
+        .message-input-area textarea {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color-medium);
+            border-radius: 20px;
+            resize: none;
+            font-family: inherit;
+            font-size: 1em;
+            margin-right: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .message-input-area button {
+            padding: 10px 20px;
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+
+        .message-input-area button:hover {
+            background-color: var(--primary-blue-dark);
+        }
+
+        .message-input-area button i {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body class="gradient-background">
+    <div class="chat-page-container">
+        <header class="chat-header">
+            <a href="{{ url_for('chats_list') }}" class="back-link" title="Назад к списку чатов">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            {% if partner %}
+            <div class="chat-header-avatar-container">
+                {% if partner.profile_picture %}
+                    <img src="{{ url_for('static', filename='uploads/' + partner.profile_picture) }}" alt="Аватар {{ partner.username }}" class="chat-header-avatar-custom">
+                {% else %}
+                    <div class="chat-header-avatar-default-circle" aria-label="Аватар {{ partner.username }}">
+                        {% set initials = partner.username[:2] if partner.username else '?' %}
+                        <span class="chat-header-avatar-initials">{{ initials.upper() }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="chat-name">{{ chat_name }}</div>
+        </header>
+
+        <div class="messages-area" id="messages-area">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message-bubble {{ 'message-sent' if message.user_id == session.user_id else 'message-received' }}">
+                        {% if not partner and message.user_id != session.user_id %}
+                            <strong>{{ message.full_name or message.username }}</strong>
+                        {% endif %}
+                        <div class="message-content">{{ message.content | nl2br }}</div>
+                        <div class="message-timestamp" title="{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}">
+                            {{ message.timestamp.strftime('%H:%M') }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align:center; color: var(--text-grey-secondary);">Сообщений пока нет. Начните диалог!</p>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="{{ url_for('chat_view', chat_id=chat_id) }}" class="message-input-area">
+            <textarea name="content" placeholder="Введите сообщение..." rows="1" id="message-input" required></textarea>
+            <button type="submit" title="Отправить">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const messagesArea = document.getElementById('messages-area');
+        if (messagesArea) {
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        const textarea = document.getElementById('message-input');
+        if (textarea) {
+            textarea.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            textarea.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    this.form.submit();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Поиск пользователей</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="gradient-background">
+
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('home') }}" class="navbar-brand">Мой профиль</a>
+            <div class="navbar-links">
+                <a href="{{ url_for('chats_list') if config.get('CHAT_IMPLEMENTED') else '#' }}" title="Сообщения">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-chat-left-dots-fill" viewBox="0 0 16 16"> <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4.414a1 1 0 0 0-.707.293L.854 15.146A.5.5 0 0 1 0 14.793zm5 4a1 1 0 1 0-2 0 1 1 0 0 0 2 0m4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0m3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/> </svg>
+                    <span class="nav-link-text">Сообщения</span>
+                </a>
+                <a href="{{ url_for('notifications') }}" title="Уведомления">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell-fill" viewBox="0 0 16 16"> <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/> </svg>
+                    <span class="nav-link-text">Уведомления</span>
+                </a>
+                <a href="{{ url_for('search_users') }}" title="Найти пользователей" style="color: var(--primary-blue);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16"> <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/> </svg>
+                    <span class="nav-link-text">Поиск</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="auth-button register-button">Выйти</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-container search-page-container">
+        <div class="search-content-box">
+            <h1>Поиск пользователей</h1>
+
+            <form method="POST" action="{{ url_for('search_users') }}" class="search-form">
+                <div class="search-main-input">
+                    <input type="text" id="query" name="query" placeholder="Введите имя, никнейм или увлечения..." value="{{ search_query or '' }}" required>
+                    <button type="submit" class="auth-button form-submit-button search-submit-button">Найти</button>
+                </div>
+
+                <div class="search-filters search-type-switch">
+                    <label class="filter-group-label">Искать по:</label>
+                    <div class="switch-options">
+                        <label>
+                            <input type="radio" name="search_type" value="user" {% if selected_search_type == 'user' or selected_search_type is none %}checked{% endif %}>
+                            Имени/Никнейму
+                        </label>
+                        <label>
+                            <input type="radio" name="search_type" value="hobbies" {% if selected_search_type == 'hobbies' %}checked{% endif %}>
+                            Увлечениям
+                        </label>
+                    </div>
+                    <small>При поиске по увлечениям можно вводить несколько через запятую</small>
+                </div>
+            </form>
+
+            <div class="search-results-section">
+                <h2>Результаты поиска</h2>
+                <div id="search-error-display" class="error-message" style="display: none; margin-bottom: 15px;"></div>
+
+                {# Отображение flash-сообщений ИСПРАВЛЕНО #}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    <div class="flash-messages-container" style="margin-bottom: 15px;"> {# Внешний контейнер для отступа, если нужен #}
+                    {% for category, message in messages %}
+                      {# Устанавливаем класс по умолчанию, если категория неизвестна #}
+                      {% set alert_category_class = category if category in ['error', 'warning', 'success'] else 'info' %}
+                      <div class="alert alert-{{ alert_category_class }}">
+                        {{ message }}
+                      </div>
+                    {% endfor %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
+
+                {% if request.method == 'POST' %}
+                    {% if results %}
+                        <ul class="search-results-list" id="search-results-list">
+                            {% for result_user_item in results %}
+                                <li class="search-result-item widget-list-item" data-user-id="{{ result_user_item.id }}">
+                                    <div class="item-avatar-name">
+                                        <img src="{{ url_for('static', filename='uploads/' + result_user_item.profile_picture if result_user_item.profile_picture else url_for('static', filename='images/default_avatar.png')) }}"
+                                             alt="Аватар {{ result_user_item.username }}"
+                                             class="profile-pic-small {{ 'default-pic' if not result_user_item.profile_picture }}">
+                                        <div class="result-user-info">
+                                            <a href="{{ url_for('profile', username=result_user_item.username) }}" class="item-name">{{ result_user_item.full_name or result_user_item.username }}</a>
+                                            <span class="result-username">@{{ result_user_item.username }}</span>
+                                            <span class="result-hobbies">
+                                                {% if result_user_item.hobbies %}
+                                                    Увлечения: {{ result_user_item.hobbies|replace(',', ', ')|truncate(80) }}
+                                                {% else %}
+                                                    Увлечения: Не указаны
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="friend-actions search-result-actions" data-user-profile-id="{{ result_user_item.id }}">
+                                        {% if result_user_item.relationship_status == 'not_friends' %}
+                                            <button class="btn-add-friend" data-action="add">Добавить в друзья</button>
+                                        {% elif result_user_item.relationship_status == 'pending_sent' %}
+                                            <button class="btn-cancel-request" data-action="cancel">Отменить заявку</button>
+                                        {% elif result_user_item.relationship_status == 'pending_received' %}
+                                            <button class="btn-accept" data-action="accept">Принять</button>
+                                            <button class="btn-decline" data-action="decline" style="margin-left: 5px;">Отклонить</button>
+                                        {% elif result_user_item.relationship_status == 'friends' %}
+                                            <span class="friends-status">Друзья</span>
+                                        {% else %}
+                                            <button class="btn-add-friend" data-action="add">Добавить в друзья</button>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        {% if search_query %}
+                            <p class="empty-list-message">По вашему запросу ничего не найдено.</p>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <ul class="search-results-list" id="search-results-list" style="display: none;"></ul>
+                    <p class="empty-list-message">Введите параметры поиска и нажмите "Найти".</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/search_handler.js') }}"></script>
+
+</body>
+</html>

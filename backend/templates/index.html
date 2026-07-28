@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добро пожаловать</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="gradient-background">
+    <header class="header">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+        
+        <div class="hero-content">
+            <h1>Добро пожаловать</h1>
+            <p class="subtitle">Для продолжения работы выберите действие</p>
+            
+            <div class="auth-buttons">
+                <a href="/login" class="auth-button login-button">Войти</a>
+                <a href="/register" class="auth-button register-button">Зарегистрироваться</a>
+            </div>
+        </div>
+    </header>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const shapes = document.querySelectorAll('.shape');
+            shapes.forEach((shape, index) => {
+                shape.style.animationDelay = `${index * 0.3}s`;
+            });
+        });
+    </script>
+</body>
+</html>

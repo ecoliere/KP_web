@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Чат</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .chats-page-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .chats-list-header h1 {
+            font-size: 2em;
+            color: var(--text-color-dark, #333);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .dialogs-ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .dialog-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--widget-background-color, #fff);
+            border-radius: var(--widget-border-radius, 10px);
+            margin-bottom: 15px;
+            box-shadow: var(--shadow-light, 0 2px 8px rgba(0,0,0,0.07));
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .dialog-item:hover {
+            background-color: var(--background-grey-light, #f8f9fa);
+            cursor: pointer;
+        }
+
+        .dialog-avatar-container {
+            width: 50px; 
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: var(--background-grey-light, #e9ecef);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .dialog-avatar-custom { width: 100%; height: 100%; object-fit: cover; }
+        .dialog-avatar-default-circle {
+            width: 100%; height: 100%; background-color: var(--primary-blue, #007bff); color: white;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+        .dialog-avatar-initials { font-size: 1.5em; text-transform: uppercase; line-height: 1; }
+
+        .dialog-info {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .dialog-partner-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-color-dark, #333);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dialog-last-message {
+            font-size: 0.9em;
+            color: var(--text-grey-primary, #555);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dialog-last-message .sender-prefix {
+            font-weight: 500;
+        }
+
+        .dialog-timestamp {
+            font-size: 0.8em;
+            color: var(--text-grey-secondary, #6c757d);
+            margin-left: 15px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .unread-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: #007bff;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .no-dialogs-message {
+            text-align: center;
+            color: var(--text-grey-secondary, #6c757d);
+            font-style: italic;
+            padding: 30px 0;
+        }
+
+        :root {
+            --widget-background-color: #fff;
+            --widget-border-radius: 10px;
+            --shadow-light: 0 2px 8px rgba(0,0,0,0.07);
+            --background-grey-light: #e9ecef;
+            --primary-blue: #007bff;
+            --text-color-dark: #333;
+            --text-grey-primary: #555;
+            --text-grey-secondary: #6c757d;
+        }
+    </style>
+</head>
+<body class="gradient-background">
+    
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('home') }}" class="navbar-brand">Мой профиль</a> 
+            <div class="navbar-links">
+                <a href="{{ url_for('chats_list') }}" title="Сообщения">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-chat-left-dots-fill" viewBox="0 0 16 16">
+                        <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4.414a1 1 0 0 0-.707.293L.854 15.146A.5.5 0 0 1 0 14.793zm5 4a1 1 0 1 0-2 0 1 1 0 0 0 2 0m4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0m3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                    </svg>
+                    <span class="nav-link-text">Сообщения</span>
+                </a>
+                <a href="{{ url_for('notifications') }}" title="Уведомления">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell-fill" viewBox="0 0 16 16">
+                        <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/>
+                    </svg>
+                    <span class="nav-link-text">Уведомления</span>
+                </a>
+                <a href="{{ url_for('search_users') }}" title="Найти пользователей">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                    </svg>
+                    <span class="nav-link-text">Поиск</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="auth-button register-button">Выйти</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="chats-page-container">
+        <header class="chats-list-header">
+            <h1>Мои Сообщения</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages" style="list-style-type: none; padding: 0; margin-bottom: 15px;">
+                    {% for category, message in messages %}
+                        <li class="alert alert-{{ category }}" style="padding: 10px; border: 1px solid #ccc; margin-bottom: 5px; border-radius: 4px;">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {% if dialogs %}
+            <ul class="dialogs-ul">
+                {% for dialog in dialogs %}
+                <a href="{{ url_for('chat_view', chat_id=dialog.chat_id) }}" class="dialog-item">
+                    <div class="dialog-avatar-container">
+                        {% if dialog.partner.profile_picture %}
+                            <img src="{{ url_for('static', filename='uploads/' + dialog.partner.profile_picture) }}"
+                                 alt="Аватар {{ dialog.partner.username }}"
+                                 class="dialog-avatar-custom">
+                        {% else %}
+                            <div class="dialog-avatar-default-circle" aria-label="Аватар {{ dialog.partner.username }}">
+                                {% set initials = '' %}
+                                {% if dialog.partner.full_name %}
+                                    {% set names = dialog.partner.full_name.split(' ') %}
+                                    {% set initials = (names[0][0] if names[0] else '') %}
+                                    {% if names|length > 1 and names[1] %}
+                                        {% set initials = initials + (names[1][0] if names[1] else '') %}
+                                    {% endif %}
+                                {% elif dialog.partner.username %}
+                                    {% set initials = dialog.partner.username[0] %}
+                                {% else %}
+                                    {% set initials = '?' %}
+                                {% endif %}
+                                <span class="dialog-avatar-initials">{{ initials|upper }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="dialog-info">
+                        <div class="dialog-partner-name">{{ dialog.partner.full_name or dialog.partner.username }}</div>
+                        {% if dialog.last_message %}
+                            <div class="dialog-last-message">
+                                {% if dialog.last_message.sender_id == session.user_id %}
+                                    <span class="sender-prefix">Вы:</span>
+                                {% endif %}
+                                {{ dialog.last_message.content }}
+                            </div>
+                        {% else %}
+                            <div class="dialog-last-message">Нет сообщений</div>
+                        {% endif %}
+                    </div>
+                    {% if dialog.last_message and dialog.last_message.sender_id != session.user_id and dialog.unread_count > 0 %}
+                        <div class="unread-indicator"></div>
+                    {% endif %}
+                    {% if dialog.last_message %}
+                        <div class="dialog-timestamp" title="{{ dialog.last_message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}">
+                            {{ dialog.last_message.timestamp.strftime('%d.%m.%y %H:%M') }}
+                        </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-dialogs-message">У вас пока нет диалогов.</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Профиль {{ profile_user.full_name or profile_user.username if profile_user else "Пользователя" }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Общие переменные (если не определены в style.css) --- */
+        :root {
+            --widget-background-color: #fff;
+            --widget-border-radius: 12px;
+            --shadow-medium: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-light: 0 2px 8px rgba(0,0,0,0.07);
+            --shadow-small: 0 2px 6px rgba(0,0,0,0.1);
+            --background-grey-light: #e9ecef;
+            --border-color-light: #fff; /* Для рамки аватара */
+            --border-color-extralight: #f0f0f0; /* Для разделителей в списках */
+            --primary-blue: #007bff;
+            --primary-blue-dark: #0056b3;
+            --text-color-dark: #333;
+            --text-grey-primary: #555;
+            --text-grey-secondary: #6c757d;
+            --button-border-radius: 6px;
+            --secondary-color: #6c757d; --secondary-dark: #5a6268;
+            --danger-color: #dc3545; --danger-dark: #c82333;
+            --success-color: #28a745; --success-dark: #218838;
+            --info-color: #17a2b8; --info-dark: #138496;
+            --warning-color: #ffc107; --warning-dark: #e0a800;
+        }
+
+        /* --- Контейнер страницы профиля --- */
+        .profile-page-container {
+            display: block; 
+        }
+
+        /* --- Шапка профиля (во всю ширину) --- */
+        .profile-header-fullwidth {
+            display: flex;
+            align-items: center;
+            background-color: var(--widget-background-color);
+            padding: 25px;
+            border-radius: var(--widget-border-radius);
+            box-shadow: var(--shadow-medium);
+            margin-bottom: 25px; 
+            gap: 25px;
+            width: 100%; 
+            box-sizing: border-box; 
+        }
+
+        .profile-header-fullwidth .profile-pic-container {
+            width: 150px; height: 150px; border-radius: 50%; overflow: hidden;
+            background-color: var(--background-grey-light); display: flex;
+            align-items: center; justify-content: center;
+            border: 4px solid var(--border-color-light); box-shadow: var(--shadow-small);
+            flex-shrink: 0;
+        }
+        .profile-header-fullwidth .profile-pic-custom { width: 100%; height: 100%; object-fit: cover; }
+        .profile-header-fullwidth .profile-pic-default-circle {
+            width: 100%; height: 100%; background-color: var(--primary-blue); color: white;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+        .profile-header-fullwidth .avatar-initials { font-size: 3.5em; text-transform: uppercase; line-height: 1; }
+
+        .profile-header-fullwidth .profile-info { flex-grow: 1; }
+        .profile-header-fullwidth .profile-info h1 {
+            margin-top: 0; margin-bottom: 5px; font-size: 2em; color: var(--text-color-dark);
+        }
+        .profile-header-fullwidth .profile-info #user-username {
+            font-size: 1.1em; color: var(--text-grey-secondary); margin-bottom: 15px; display: block;
+        }
+        .profile-header-fullwidth .profile-actions {
+            margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px;
+        }
+        
+        .btn-profile-action {
+            padding: 10px 18px; border-radius: var(--button-border-radius); font-size: 0.95em; font-weight: 500;
+            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; border: 1px solid transparent; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        .btn-profile-action i { font-size: 1.1em; }
+        .btn-profile-action.btn-edit { background-color: var(--secondary-color); color: white; }
+        .btn-profile-action.btn-edit:hover { background-color: var(--secondary-dark); }
+        .btn-profile-action.btn-add { background-color: var(--primary-blue); color: white; }
+        .btn-profile-action.btn-add:hover { background-color: var(--primary-blue-dark); }
+        .btn-profile-action.btn-cancel, .btn-profile-action.btn-decline { background-color: var(--danger-color); color: white; }
+        .btn-profile-action.btn-cancel:hover, .btn-profile-action.btn-decline:hover { background-color: var(--danger-dark); }
+        .btn-profile-action.btn-accept { background-color: var(--success-color); color: white; }
+        .btn-profile-action.btn-accept:hover { background-color: var(--success-dark); }
+        .btn-profile-action.btn-message { background-color: var(--info-color); color: white; }
+        .btn-profile-action.btn-message:hover { background-color: var(--info-dark); }
+        .btn-profile-action.btn-remove { background-color: var(--warning-color); color: var(--text-color-dark); border-color: var(--warning-color); }
+        .btn-profile-action.btn-remove:hover { background-color: var(--warning-dark); border-color: var(--warning-dark); }
+        
+        .profile-content-columns {
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 25px; 
+            align-items: flex-start;
+            width: 100%; 
+            box-sizing: border-box;
+        }
+
+        .profile-content-sidebar { 
+            width: 300px; 
+            flex-shrink: 0; 
+        }
+
+        .profile-content-feed { 
+            flex-grow: 1; 
+            min-width: 0; 
+        }
+
+        .profile-widget {
+            background-color: var(--widget-background-color); padding: 20px;
+            border-radius: var(--widget-border-radius); box-shadow: var(--shadow-light);
+            margin-bottom: 25px;
+        }
+        .profile-content-sidebar .profile-widget:last-child,
+        .profile-content-feed .profile-widget:last-child { 
+            margin-bottom: 0; 
+        }
+
+        .profile-widget .widget-title {
+            font-size: 1.2em; font-weight: 600; color: var(--text-color-dark);
+            margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--border-color-extralight);
+            padding-bottom: 10px;
+        }
+        .profile-widget .widget-title .widget-count { font-size: 0.85em; font-weight: 500; color: var(--text-grey-secondary); }
+        .profile-widget .widget-text { color: var(--text-grey-primary); line-height: 1.6; }
+        .profile-widget .empty-list-message { color: var(--text-grey-secondary); font-style: italic; }
+
+        .widget-info-list, .widget-list { list-style-type: none; padding-left: 0; margin-bottom: 0; }
+        .widget-info-list li {
+            display: flex; justify-content: space-between; padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color-extralight); font-size: 0.9em;
+        }
+        .widget-info-list li:last-child { border-bottom: none; }
+        .widget-info-list .info-label { font-weight: 500; color: var(--text-grey-primary); }
+        .widget-info-list span:not(.info-label) { color: var(--text-color-dark); }
+
+        .widget-list-item { padding: 10px 0; border-bottom: 1px dashed var(--border-color-extralight); }
+        .widget-list-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .widget-list-item .item-avatar-name { display: flex; align-items: center; }
+        .widget-list-item .item-name { font-weight: 500; color: var(--primary-blue); text-decoration: none; }
+        .widget-list-item .item-name:hover { text-decoration: underline; }
+
+        .avatar-container-small {
+            width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+            background-color: var(--background-grey-light); display: flex; align-items: center;
+            justify-content: center; margin-right: 12px; flex-shrink: 0;
+        }
+        .avatar-container-small .profile-pic-small-custom { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-container-small .profile-pic-default-circle-small {
+            width: 100%; height: 100%; background-color: var(--primary-blue); color: white;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+        .avatar-container-small .avatar-initials-small { font-size: 1.1em; text-transform: uppercase; line-height: 1; }
+
+        .posts-list { list-style-type: none; padding-left: 0; }
+        .post-item { margin-bottom: 20px; background-color: var(--widget-background-color); padding: 15px; border-radius: var(--widget-border-radius); box-shadow: var(--shadow-light); }
+        .post-header { display: flex; align-items: center; margin-bottom: 10px; }
+        .post-author-name { font-weight: 600; color: var(--text-color-dark); text-decoration: none; }
+        .post-author-name:hover { text-decoration: underline; }
+        .post-timestamp { font-size: 0.85em; color: var(--text-grey-secondary); display: block; }
+        .post-content p { color: var(--text-grey-primary); line-height: 1.6; margin-top: 0; margin-bottom: 0; word-wrap: break-word; }
+
+        @media (max-width: 992px) { 
+            .profile-content-columns { flex-direction: column; }
+            .profile-content-sidebar { width: 100%; }
+        }
+        @media (max-width: 768px) { 
+            .profile-header-fullwidth { flex-direction: column; align-items: center; text-align: center; }
+            .profile-header-fullwidth .profile-actions { justify-content: center; }
+        }
+    </style>
+</head>
+<body class="gradient-background">
+
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('home') }}" class="navbar-brand">Мой профиль</a>
+            <div class="navbar-links">
+                <a href="{{ url_for('chats_list') if config.get('CHAT_IMPLEMENTED') else '#' }}" title="Сообщения">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-chat-left-dots-fill" viewBox="0 0 16 16"> <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4.414a1 1 0 0 0-.707.293L.854 15.146A.5.5 0 0 1 0 14.793zm5 4a1 1 0 1 0-2 0 1 1 0 0 0 2 0m4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0m3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/> </svg>
+                    <span class="nav-link-text">Сообщения</span>
+                </a>
+                <a href="{{ url_for('notifications') }}" title="Уведомления">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell-fill" viewBox="0 0 16 16"> <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/> </svg>
+                    <span class="nav-link-text">Уведомления</span>
+                </a>
+                <a href="{{ url_for('search_users') }}" title="Найти пользователей">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16"> <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/> </svg>
+                    <span class="nav-link-text">Поиск</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="auth-button register-button">Выйти</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-container profile-page-container">
+        {% if profile_user %}
+            <header class="profile-header-fullwidth">
+                <div class="profile-pic-container">
+                    {% if profile_user.profile_picture %}
+                        <img id="profile-pic"
+                             src="{{ url_for('static', filename='uploads/' + profile_user.profile_picture) }}"
+                             alt="Аватар {{ profile_user.username }}"
+                             class="profile-pic-custom">
+                    {% else %}
+                        <div class="profile-pic-default-circle" aria-label="Аватар {{ profile_user.username }}">
+                            {% set initials = '' %}
+                            {% if profile_user.full_name %}{% set names = profile_user.full_name.split(' ') %}{% set initials = (names[0][0] if names[0] else '') %}{% if names|length > 1 and names[1] %}{% set initials = initials + (names[1][0] if names[1] else '') %}{% endif %}{% elif profile_user.username %}{% set initials = profile_user.username[0] %}{% else %}{% set initials = '?' %}{% endif %}
+                            <span class="avatar-initials">{{ initials|upper }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="profile-info">
+                    <h1 id="user-fullname">{{ profile_user.full_name or profile_user.username }}</h1>
+                    <span id="user-username">@{{ profile_user.username }}</span>
+
+                    <div class="profile-actions" id="profile-action-buttons" data-profile-user-id="{{ profile_user.id }}">
+                        {% if relationship_status == 'self' %}
+                            <a href="{{ url_for('edit_profile') }}" class="btn-profile-action btn-edit">
+                                <i class="bi bi-pencil-square"></i> Редактировать профиль
+                            </a>
+                        {% elif relationship_status == 'not_friends' %}
+                            <button class="btn-profile-action btn-add" data-action="add">
+                                <i class="bi bi-person-plus-fill"></i> Добавить в друзья
+                            </button>
+                        {% elif relationship_status == 'pending_sent' %}
+                            <button class="btn-profile-action btn-cancel" data-action="cancel">
+                                <i class="bi bi-x-circle-fill"></i> Отменить заявку
+                            </button>
+                        {% elif relationship_status == 'pending_received' %}
+                            <button class="btn-profile-action btn-accept" data-action="accept">
+                                <i class="bi bi-check-lg"></i> Принять заявку
+                            </button>
+                            <button class="btn-profile-action btn-decline" data-action="decline" style="margin-left: 10px;">
+                                <i class="bi bi-x-lg"></i> Отклонить
+                            </button>
+                        {% elif relationship_status == 'accepted' %}
+                            <button class="btn-profile-action btn-remove" data-action="remove">
+                                <i class="bi bi-person-dash-fill"></i> Удалить из друзей
+                            </button>
+                            {% if config.get('CHAT_IMPLEMENTED') %}
+                                <a href="{{ url_for('start_chat', recipient_username=profile_user.username) }}" 
+                                   class="btn-profile-action btn-message">
+                                    <i class="bi bi-chat-dots-fill"></i> Написать сообщение
+                                </a>
+                            {% endif %}
+                        {% elif relationship_status == 'not_logged_in' %}
+                             <a href="{{ url_for('login', next=request.url) }}" class="btn-profile-action btn-add">
+                                <i class="bi bi-person-plus-fill"></i> Войти, чтобы взаимодействовать
+                            </a>
+                        {% else %}
+                            {# Можно добавить какой-то fallback или оставить пустым #}
+                        {% endif %}
+                    </div>
+                    <div id="profile-actions-error" class="error-message small-error" style="display: none; margin-top: 10px;"></div>
+                </div>
+            </header>
+
+            <div class="profile-content-columns">
+                <aside class="profile-content-sidebar">
+                    <section class="profile-widget" id="profile-about-section">
+                        <h2 class="widget-title">Информация</h2>
+                        <ul class="widget-info-list">
+                            <li><span class="info-label">В сети:</span> <span id="user-last-visit">{{ profile_user.last_visit_formatted }}</span></li>
+                            <li><span class="info-label">Визитов:</span> <span id="user-visit-count">{{ profile_user.visit_count or 0 }}</span></li>
+                            <li><span class="info-label">Регистрация:</span> <span id="user-reg-date">{{ profile_user.registration_date_formatted }}</span></li>
+                        </ul>
+                    </section>
+                    <section class="profile-widget">
+                        <h2 class="widget-title">Увлечения</h2>
+                        <p class="widget-text" id="user-hobbies">{{ profile_user.hobbies|replace(',', ', ') if profile_user.hobbies else 'Не указаны' }}</p>
+                    </section>
+                    <section class="profile-widget" id="friends-widget-section">
+                        <h2 class="widget-title">Друзья <span class="widget-count" id="friends-count">{{ friends|length }}</span></h2>
+                        {% if friends %}
+                            <ul class="widget-list" id="friends-list">
+                                {% for friend in friends %}
+                                <li class="widget-list-item">
+                                    <div class="item-avatar-name">
+                                        <div class="avatar-container-small">
+                                            {% if friend.profile_picture %}
+                                                <img src="{{ url_for('static', filename='uploads/' + friend.profile_picture) }}" alt="Аватар {{ friend.username }}" class="profile-pic-small-custom">
+                                            {% else %}
+                                                <div class="profile-pic-default-circle-small" aria-label="Аватар {{ friend.username }}">
+                                                    {% set friend_initials = '' %}{% if friend.full_name %}{% set friend_names = friend.full_name.split(' ') %}{% set friend_initials = (friend_names[0][0] if friend_names[0] else '') %}{% if friend_names|length > 1 and friend_names[1] %}{% set friend_initials = friend_initials + (friend_names[1][0] if friend_names[1] else '') %}{% endif %}{% elif friend.username %}{% set friend_initials = friend.username[0] %}{% else %}{% set friend_initials = '?' %}{% endif %}
+                                                    <span class="avatar-initials-small">{{ friend_initials|upper }}</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <a href="{{ url_for('profile', username=friend.username) }}" class="item-name">{{ friend.full_name or friend.username }}</a>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="empty-list-message" id="no-friends-message">У пользователя еще нет друзей.</p>
+                        {% endif %}
+                    </section>
+                </aside> 
+
+                <main class="profile-content-feed">
+                    <section class="profile-widget">
+                        <h2 class="widget-title">Записи пользователя</h2>
+                        {% if posts %}
+                            <ul class="posts-list" id="profile-posts-list">
+                                {% for post in posts %}
+                                <li class="post-item">
+                                    <div class="post-header">
+                                        <div class="avatar-container-small">
+                                            {% if post.author_profile_picture %}
+                                                <img src="{{ url_for('static', filename='uploads/' + post.author_profile_picture) }}" alt="Аватар {{ post.author_username }}" class="profile-pic-small-custom">
+                                            {% else %}
+                                                <div class="profile-pic-default-circle-small" aria-label="Аватар {{ post.author_username }}">
+                                                    {% set post_author_initials = '' %}
+                                                    {% if post.author_full_name %}
+                                                        {% set post_author_names = post.author_full_name.split(' ') %}
+                                                        {% set post_author_initials = (post_author_names[0][0] if post_author_names[0] else '') %}
+                                                        {% if post_author_names|length > 1 and post_author_names[1] %}
+                                                            {% set post_author_initials = post_author_initials + (post_author_names[1][0] if post_author_names[1] else '') %}
+                                                        {% endif %}
+                                                    {% elif post.author_username %}
+                                                        {% set post_author_initials = post.author_username[0] %}
+                                                    {% else %}
+                                                        {% set post_author_initials = '?' %}
+                                                    {% endif %}
+                                                    <span class="avatar-initials-small">{{ post_author_initials|upper }}</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="post-author-info">
+                                            <a href="{{ url_for('profile', username=post.author_username) }}" class="post-author-name">{{ post.author_full_name or post.author_username }}</a>
+                                            <span class="post-timestamp" title="{{ post.created_at_iso or '' }}">{{ post.created_at_formatted }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="post-content"><p>{{ post.content | e }}</p></div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="empty-list-message" style="margin-top: 20px;">У этого пользователя еще нет записей.</p>
+                        {% endif %}
+                    </section>
+                </main>
+            </div>
+        {% else %}
+            <div class="content-box" style="text-align: center; padding: 20px;">
+                <h1>Профиль не найден</h1>
+                <p>К сожалению, пользователь с таким именем не найден.</p>
+                <a href="{{ url_for('home') }}" class="auth-button">Вернуться на главную</a>
+            </div>
+        {% endif %}
+    </div> 
+    <script src="{{ url_for('static', filename='js/profile_handler.js') }}"></script>
+</body>
+</html>
